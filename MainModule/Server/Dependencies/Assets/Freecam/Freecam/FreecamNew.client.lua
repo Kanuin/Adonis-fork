@@ -978,24 +978,31 @@ local Input = {} do
 				end
 			else
 				if not modeActive then return end
-				if leafSelected then
-					-- no-op
-				elseif #navigationStack > 0 then
-					local frame = navigationStack[#navigationStack]
-					frame.index = frame.index % #frame.modes + 1
-				else
-					local top = modes[modeIndex]
-					if top.type == "group" then
-						table.insert(navigationStack, {modes = top.modes, index = 1, groupName = top.name})
-					elseif top.type == "toggle" then
-						top.toggle()
-					elseif top.type == "cycle" then
-						local items = top.items()
-						if #items > 0 then top.setIndex(top.getIndex() % #items + 1) end
-					elseif top.type == "action" then
-						top.action()
-					elseif top.type == "axis" then
-						leafSelected = true
+				if not leafSelected then
+					if #navigationStack > 0 then
+						local frame = navigationStack[#navigationStack]
+						frame.index = frame.index % #frame.modes + 1
+					else
+						local top = modes[modeIndex]
+				
+						if top.type == "group" then
+							table.insert(navigationStack, {
+								modes = top.modes,
+								index = 1,
+								groupName = top.name,
+							})
+						elseif top.type == "toggle" then
+							top.toggle()
+						elseif top.type == "cycle" then
+							local items = top.items()
+							if #items > 0 then
+								top.setIndex(top.getIndex() % #items + 1)
+							end
+						elseif top.type == "action" then
+							top.action()
+						elseif top.type == "axis" then
+							leafSelected = true
+						end
 					end
 				end
 			end
@@ -1020,18 +1027,16 @@ local Input = {} do
 						end
 					elseif mode.type == "action" then
 						mode.action()
-					elseif mode.type == "axis" then
-						-- axis continuous adjustment handled by ModeControl
 					end
 				elseif val > 0 then
-					if isDisabled(mode) then
-						-- no-op
-					elseif mode.type == "group" then
-						table.insert(navigationStack, {modes = mode.modes, index = 1, groupName = mode.name})
-					elseif mode.type == "action" then
-						mode.action()
-					else
-						monitorItemSelected = true
+					if not isDisabled(mode) then
+						if mode.type == "group" then
+							table.insert(navigationStack, {modes = mode.modes, index = 1, groupName = mode.name})
+						elseif mode.type == "action" then
+							mode.action()
+						else
+							monitorItemSelected = true
+						end
 					end
 				elseif val < 0 then
 					monitorItemSelected = false
@@ -1042,30 +1047,30 @@ local Input = {} do
 					end
 				end
 			else
-				if leafSelected then
-					-- no-op
-				elseif #navigationStack > 0 then
-					local mode = currentMode()
-					if mode.type == "group" then
-						table.insert(navigationStack, {modes = mode.modes, index = 1, groupName = mode.name})
-					elseif mode.type == "toggle" then
-						mode.toggle()
-					elseif mode.type == "cycle" then
-						local items = mode.items()
-						if #items == 0 then return end
-						if val > 0 then
-							mode.setIndex(mode.getIndex() % #items + 1)
-						elseif val < 0 then
-							mode.setIndex((mode.getIndex() - 2) % #items + 1)
+				if not leafSelected then
+					if #navigationStack > 0 then
+						local mode = currentMode()
+						if mode.type == "group" then
+							table.insert(navigationStack, {modes = mode.modes, index = 1, groupName = mode.name})
+						elseif mode.type == "toggle" then
+							mode.toggle()
+						elseif mode.type == "cycle" then
+							local items = mode.items()
+							if #items == 0 then return end
+							if val > 0 then
+								mode.setIndex(mode.getIndex() % #items + 1)
+							elseif val < 0 then
+								mode.setIndex((mode.getIndex() - 2) % #items + 1)
+							end
+						elseif mode.type == "action" then
+							mode.action()
 						end
-					elseif mode.type == "action" then
-						mode.action()
-					end
-				else
-					if val > 0 then
-						modeIndex = modeIndex % #modes + 1
-					elseif val < 0 then
-						modeIndex = (modeIndex - 2) % #modes + 1
+					else
+						if val > 0 then
+							modeIndex = modeIndex % #modes + 1
+						elseif val < 0 then
+							modeIndex = (modeIndex - 2) % #modes + 1
+						end
 					end
 				end
 			end
